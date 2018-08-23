@@ -1,0 +1,104 @@
+#This is docker-compose version for SWARM using OVERLAY network
+# To run the services, use "docker stack deploy"
+version: '3.2'
+services:
+    zk1:
+        image: "registry.nhan.com:5000/zookeeper:3.4"
+        environment:
+          ZOO_MY_ID: 1
+          ZOO_CLIENT_PORT: 2181
+          ZOO_SERVERS: server.1=zk1:2888:3888 server.2=zk2:2888:3888 server.3=zk3:2888:3888
+        ports:
+            - "2181:2181"
+            - "2888"
+            - "3888"
+        command:  "/opt/zookeeper/bin/zkServer.sh start-foreground"
+        volumes:
+          - zoodata:/var/zookeeper
+        hostname: zk1
+        deploy:
+            replicas: 1
+            resources:
+                limits:
+                    cpus: '0.1'
+                    memory: 1G
+                reservations:
+                    cpus: '0.001'
+                    memory: 500M 
+            placement:
+                constraints:
+                - node.role == manager
+        networks:
+            - zk_network
+    zk2:
+        image: "registry.nhan.com:5000/zookeeper:3.4"
+        environment:
+            ZOO_MY_ID: 2
+            ZOO_CLIENT_PORT: 2182
+            ZOO_SERVERS: server.1=zk1:2888:3888 server.2=zk2:2888:3888 server.3=zk3:2888:3888
+        ports:
+            - "2182:2181"
+            - "2888"
+            - "3888"
+        command:  "/opt/zookeeper/bin/zkServer.sh start-foreground"   
+        volumes:
+            - zoodata:/var/zookeeper
+        hostname: zk2
+        deploy:
+            replicas: 1
+            resources:
+                limits:
+                    cpus: '0.1'
+                    memory: 1G
+                reservations:
+                    cpus: '0.001'
+                    memory: 500M 
+            placement:
+                constraints:
+                  - node.hostname == centos2
+        networks:
+            - zk_network
+    zk3:
+        image: "registry.nhan.com:5000/zookeeper:3.4"
+        environment:
+            ZOO_MY_ID: 3
+            ZOO_CLIENT_PORT: 2183
+            ZOO_SERVERS: server.1=zk1:2888:3888 server.2=zk2:2888:3888 server.3=zk3:2888:3888
+        ports:
+            - "2183:2181"
+            - "2890"
+            - "3890"
+        command:  "/opt/zookeeper/bin/zkServer.sh start-foreground"
+        volumes:
+            - zoodata:/var/zookeeper
+        hostname: zk3
+        networks:
+            - zk_network
+        deploy:
+            replicas: 1
+            resources:
+                limits:
+                    cpus: '0.1'
+                    memory: 1G
+                reservations:
+                    cpus: '0.001'
+                    memory: 500M 
+            placement:
+                constraints:
+                  - node.hostname == centos3
+        
+volumes:
+    zoodata:
+        driver: local
+        driver_opts:
+            type: 'none'
+            o: 'bind'
+            device: '/var/zookeeper'
+networks:
+    zk_network:
+        driver: overlay
+        attachable: true
+        ipam:
+            driver: default
+            config:
+            - subnet: 10.0.99.0/24
