@@ -81,9 +81,9 @@ We see that instance on centos2 is the leader. Now check the other nodes
 
 ### Caveat
 
-Docker overlay network uses port mapping and forwarding. If the Docker host disbled ip4 forwarding, there will be error: the node cannot connect to each others
+Docker overlay network uses port mapping and forwarding. If the Docker host disables ip4 forwarding, there will be error: the node cannot connect to each others
 
-Therefore, make sure ip4 forwarding is enable. Below is command to check on Centos 7
+Therefore, make sure ip4 forwarding is enabled on the Docker host (not the container). Below is command to check on Centos 7
 
 ```
 	sudo vi /etc/sysctl.d/11-gce-network-security.conf
